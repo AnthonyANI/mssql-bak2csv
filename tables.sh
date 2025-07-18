@@ -45,42 +45,20 @@ list_tables() {
     echo "$clean_tables"
 }
 
-create_table_lookup_query() {
-    local table="$1"
-    local fallback_mode="${2:-false}"
-    local clean_table
-    clean_table=$(echo "$table" | tr -d '[]')
-    
-    local additional_condition=""
-    if [ "$fallback_mode" = "false" ]; then
-        additional_condition="OR OBJECT_ID(N'$clean_table') IS NOT NULL"
-    fi
-    
-    echo "
-    SELECT SCHEMA_NAME(schema_id) + '.' + name 
-    FROM sys.tables 
-    WHERE LOWER(name) = LOWER('$clean_table') 
-    $additional_condition"
-}
-
-execute_table_lookup() {
-    local database="$1"
-    local query="$2"
-    
-    execute_sql_query "$database" "$query" -h-1 -W | 
-        grep -v "^Msg" | grep -v "^$" | head -1 | tr -d '[:space:]'
-}
-
 get_table_schema_and_name() {
     local database="$1"
     local table="$2"
     
+    local clean_table=${table//[\[\]]/}
     local found_table
-    found_table=$(execute_table_lookup "$database" "$(create_table_lookup_query "$table")")
-    
-    if [ -z "$found_table" ]; then
-        found_table=$(execute_table_lookup "$database" "$(create_table_lookup_query "$table" true)")
-    fi
+
+    found_table=$(execute_sql_query "$database" "
+    SET NOCOUNT ON;
+    SELECT TOP 1 SCHEMA_NAME(schema_id) + '.' + name 
+    FROM sys.tables 
+    WHERE LOWER(name) = LOWER('$clean_table') 
+       OR OBJECT_ID(N'$clean_table') IS NOT NULL;
+    " -h-1 -W | grep -v "^Msg" | grep -v "^$" | head -1 | tr -d '[:space:]')
     
     if [ -z "$found_table" ]; then
         return 1
