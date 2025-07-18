@@ -38,7 +38,7 @@ parse_arguments() {
                 exit 0
                 ;;
             *)
-                println "Unknown option: $1"
+                display "Unknown option: $1"
                 show_usage
                 exit 1
                 ;;
@@ -57,7 +57,7 @@ main() {
     
     print_section "SQL Server" "-"
     if ! start_sql_server; then
-        println "Failed to start SQL Server"
+        display "Failed to start SQL Server"
         exit 1
     fi
     
@@ -67,13 +67,13 @@ main() {
     
     DB_NAME=$(get_database_name "$CONTAINER_BAK_FILE")
     if [ -z "$DB_NAME" ]; then
-        println "Failed to get database name from BAK file"
+        display "Failed to get database name from BAK file"
         exit 1
     fi
     
     INTERNAL_BAK_FILE=$(prepare_bak_file "$CONTAINER_BAK_FILE")
     if [ -z "$INTERNAL_BAK_FILE" ] || [ ! -f "$INTERNAL_BAK_FILE" ]; then
-        println "Failed to prepare BAK file for SQL Server"
+        display "Failed to prepare BAK file for SQL Server"
         exit 1
     fi
     
@@ -86,7 +86,7 @@ main() {
         exit 1
     fi
     
-    println "📝 Log file: $LOG_FILE"
+    display "📝 Log file: $LOG_FILE"
 }
 
 main "$@"

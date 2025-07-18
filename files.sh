@@ -13,7 +13,7 @@ determine_output_dir() {
 
 find_bak_file() {
     if [[ -z "$BAK_FILE" ]]; then
-        println "Looking for .bak files..."
+        display "Looking for .bak files..."
         
         local bak_files=()
         while IFS= read -r -d '' file; do
@@ -21,20 +21,20 @@ find_bak_file() {
         done < <(find /mnt/bak -maxdepth 1 -name "*.bak" -type f -print0)
         
         if [[ ${#bak_files[@]} -eq 0 ]]; then
-            println "Error: No .bak files found"
-            println "Make sure you mounted a directory containing .bak files to /mnt/bak"
+            display "Error: No .bak files found"
+            display "Make sure you mounted a directory containing .bak files to /mnt/bak"
             return 1
         elif [[ ${#bak_files[@]} -eq 1 ]]; then
             export CONTAINER_BAK_FILE="${bak_files[0]}"
             export BAK_FILENAME
             BAK_FILENAME=$(basename "$CONTAINER_BAK_FILE")
-            println "Found BAK file: $BAK_FILENAME"
+            display "Found BAK file: $BAK_FILENAME"
         else
-            println "Error: Multiple .bak files found:"
+            display "Error: Multiple .bak files found:"
             for file in "${bak_files[@]}"; do
-                println "  $(basename "$file")"
+                display "  $(basename "$file")"
             done
-            println "Please specify which one to use with --bak-file FILENAME"
+            display "Please specify which one to use with --bak-file FILENAME"
             return 1
         fi
     else
@@ -42,8 +42,8 @@ find_bak_file() {
         export CONTAINER_BAK_FILE="/mnt/bak/$BAK_FILENAME"
         
         if [[ ! -f "$CONTAINER_BAK_FILE" ]]; then
-            println "Error: BAK file '$BAK_FILENAME' not found"
-            println "Make sure you mounted the directory containing your BAK file to /mnt/bak"
+            display "Error: BAK file '$BAK_FILENAME' not found"
+            display "Make sure you mounted the directory containing your BAK file to /mnt/bak"
             return 1
         fi
     fi
@@ -55,7 +55,7 @@ prepare_bak_file() {
     local bak_file="$1"
     local internal_path="/var/opt/mssql/backup"
     
-    println "📁 Copying BAK file to SQL Server backup directory..." true
+    display "📁 Copying BAK file to SQL Server backup directory..." --nolog
     mkdir -p "$internal_path"
     cp "$bak_file" "$internal_path/"
     sync
@@ -63,7 +63,7 @@ prepare_bak_file() {
     local target
     target="${internal_path}/$(basename "$bak_file")"
     if [ ! -f "$target" ]; then
-        println "Error: Failed to copy BAK file"
+        display "Error: Failed to copy BAK file"
         return 1
     fi
     

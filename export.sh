@@ -68,7 +68,7 @@ export_tables() {
     local output_path="$3"
     
     print_section "Export" "-"
-    println "🔄 Starting exports (press Ctrl+C to interrupt)"
+    display "🔄 Starting exports (press Ctrl+C to cancel)"
     echo ""
     
     local total_tables
@@ -84,7 +84,7 @@ export_tables() {
     
     while read -r table_info; do
         if [ -f "/tmp/cancel_export" ]; then
-            println "\nExport cancelled."
+            display "\nExport cancelled."
             break
         fi
         
@@ -110,10 +110,10 @@ export_tables() {
                 row_count=$(echo "$result" | cut -d':' -f2)
                 
                 if [ "$status" -eq 0 ]; then
-                    logln "✅ Exported ${table_db}.${table_name} ($row_count rows)"
+                    log "✅ Exported ${table_db}.${table_name} ($row_count rows)"
                     success_count=$((success_count+1))
                 else
-                    logln "❌ Failed: ${table_db}.${table_name}"
+                    log "❌ Failed: ${table_db}.${table_name}"
                     failed_count=$((failed_count+1))
                 fi
             fi
@@ -121,12 +121,12 @@ export_tables() {
     done < <(echo "$tables")
     
     if [ $DISPLAY_INITIALIZED -eq 1 ]; then
-        clear_previous_output
+        reposition_cursor
     fi
     
     echo ""
     print_section "Export Complete" "-"
-    println "✅ Exported $success_count tables successfully${failed_count:+, ❌ $failed_count tables failed}"
+    display "✅ Exported $success_count tables successfully${failed_count:+, ❌ $failed_count tables failed}"
 }
 
 process_database_export() {
@@ -136,7 +136,7 @@ process_database_export() {
     print_section "Available Tables" "-"
     local clean_tables
     if ! clean_tables=$(list_tables); then
-        println "❌ Failed to list tables from database."
+        display "❌ Failed to list tables from database."
         return 1
     fi
     

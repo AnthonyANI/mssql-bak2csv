@@ -30,7 +30,7 @@ list_tables() {
     tables=$(execute_sql_query "" "$(get_table_list_query)" -h-1 -s"," -W -r1)
 
     if ! echo "$tables" | grep -q "\."; then
-        println "Error: Failed to list tables."
+        display "Error: Failed to list tables."
         return 1
     fi
 
@@ -38,7 +38,7 @@ list_tables() {
     clean_tables=$(filter_table_output "$tables")
 
     if [ -z "$clean_tables" ]; then
-        println "No tables found in restored database."
+        display "No tables found in restored database."
         return 1
     fi
 

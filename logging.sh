@@ -14,17 +14,17 @@ setup_logging() {
     
     touch "$LOG_FILE"
     
-    println "============================================="
-    println "MSSQL BAK to CSV Converter"
-    println "$(date)"
-    println "============================================="
+    display "============================================="
+    display "MSSQL BAK to CSV Converter"
+    display "$(date)"
+    display "============================================="
     
     start_flush_timer
     
     LOGGING_INITIALIZED=1
 }
 
-logln() {
+log() {
     local message="$1"
     
     if [ "$LOGGING_INITIALIZED" -eq 1 ]; then
@@ -55,7 +55,9 @@ start_flush_timer() {
 add_to_log_buffer() {
     local message="$1"
     
-    LOG_BUFFER="${LOG_BUFFER}${message}"$'\n'
+    # Use printf to correctly interpret escape sequences
+    printf -v escaped_message "%b" "$message"
+    LOG_BUFFER="${LOG_BUFFER}${escaped_message}"$'\n'
     LOG_BUFFER_SIZE=$((LOG_BUFFER_SIZE + 1))
     
     if [ "$LOG_BUFFER_SIZE" -ge "$MAX_BUFFER_SIZE" ]; then
@@ -66,12 +68,12 @@ add_to_log_buffer() {
 export EXPORT_RUNNING=0
 
 cleanup() {
-    println ""
-    println ""
-    println "⏹️ Cleaning up and exiting..."
+    display ""
+    display ""
+    display "⏹️ Cleaning up and exiting..."
     
     if [ $EXPORT_RUNNING -eq 1 ]; then
-        println "Export cancelled by user signal."
+        display "Export cancelled by user signal."
         touch /tmp/cancel_export
     fi
     
@@ -84,7 +86,7 @@ cleanup() {
     pkill -9 sqlcmd 2>/dev/null
     
     if [[ -n "$SQL_PID" ]]; then
-        println "Shutting down SQL Server..."
+        display "Shutting down SQL Server..."
         kill -TERM "$SQL_PID" 2>/dev/null
         wait "$SQL_PID" 2>/dev/null
     fi

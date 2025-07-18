@@ -1,21 +1,43 @@
 #!/bin/bash
 
-# Define terminal control sequences
 CURSOR_UP="\033[1A"
 CLEAR_LINE="\033[2K"
 CARRIAGE_RETURN="\r"
 
 # Display and UI functions
-println() {
-    local message="$1"
-    local skip_log="${2:-false}"
-    
-    # Print to console (via stderr to avoid mangling return values)
-    echo "$message" >&2
 
+display() {
+    local skip_log="false"
+    local echo_flags=()
+    local message=""
+    
+    # Check for --nolog as last argument
+    if [[ "$#" -gt 0 && "${!#}" == "--nolog" ]]; then
+        skip_log="true"
+        set -- "${@:1:$(($#-1))}"  # Remove last argument
+    fi
+    
+    # Process echo flags
+    while [[ "$#" -gt 0 && "$1" =~ ^-[a-zA-Z]+$ ]]; do
+        echo_flags+=("$1")
+        shift
+    done
+    
+    # Remaining arguments form the message
+    if [[ "$#" -gt 0 ]]; then
+        message="$*"
+    fi
+    
+    # Handle echo flags properly
+    if [[ "${#echo_flags[@]}" -gt 0 ]]; then
+        echo "${echo_flags[@]}" "$message" >&2
+    else
+        echo "$message" >&2
+    fi
+    
     # Log to file unless skip_log is true
     if [ "$skip_log" != "true" ]; then
-        logln "$message"
+        log "$message"
     fi
 }
 
@@ -24,22 +46,19 @@ print_section() {
     local char="${2:-=}"
     local width=50
     
-    println ""
-    println "${char}$(printf "%${width}s" | tr " " "$char")"
-    println "$title"
-    println "${char}$(printf "%${width}s" | tr " " "$char")"
+    display ""
+    display "${char}$(printf "%${width}s" | tr " " "$char")"
+    display "$title"
+    display "${char}$(printf "%${width}s" | tr " " "$char")"
 }
 
-# Number of lines used in display updates
 DISPLAY_LINES=3
 DISPLAY_INITIALIZED=0
 
-# Helper function to clear and reposition cursor for display updates
-clear_previous_output() {
+reposition_cursor() {
     for ((i=0; i<DISPLAY_LINES; i++)); do
-        echo -ne "$CURSOR_UP$CARRIAGE_RETURN$CLEAR_LINE"
+        echo -ne "$CURSOR_UP$CARRIAGE_RETURN"
     done
-    echo -ne "$CARRIAGE_RETURN"
 }
 
 update_display() {
@@ -51,7 +70,7 @@ update_display() {
     local start_time="$6"
     
     if [ $DISPLAY_INITIALIZED -eq 1 ]; then
-        clear_previous_output
+        reposition_cursor
     fi
     
     local table_display
@@ -129,24 +148,24 @@ count_and_display_tables() {
     local table_count=0
     while IFS= read -r table_info; do
         table_count=$((table_count+1))
-        println "  $table_count. $table_info"
+        display "$table_count. $table_info"
     done <<< "$clean_tables"
 }
 
 show_usage() {
-    println "Usage: docker run -v /host/path/to/bak:/mnt/bak -v /host/path/to/output:/mnt/csv mssql-bak2csv [options]" true
-    println "" true
-    println "Options:" true
-    println "  --bak-file FILENAME       Name of the BAK file in the mounted directory (optional if only one .bak file exists)" true
-    println "  --tables TABLE1,TABLE2    Comma-separated list of tables to export (default: all)" true
-    println "                           Format: [database.]table_name" true
-    println "  --prefix PREFIX           Prefix to add to CSV filenames (e.g., 'ABC1_AB_')" true
-    println "  --suffix SUFFIX           Suffix to add to CSV filenames (e.g., '_backup')" true
-    println "  --help                    Show this help message" true
-    println "" true
-    println "Examples:" true
-    println "  docker run -v /data:/mnt/bak -v /data/output:/mnt/csv mssql-bak2csv" true
-    println "  docker run -v /data:/mnt/bak -v /data/output:/mnt/csv mssql-bak2csv --bak-file database.bak" true
-    println "  docker run -v /data:/mnt/bak -v /data/output:/mnt/csv mssql-bak2csv --bak-file database.bak --tables table1,table2" true
-    println "  docker run -v /data:/mnt/bak -v /data/output:/mnt/csv mssql-bak2csv --prefix 'ABC1_AB_' --suffix '_backup'" true
+    display "Usage: docker run -v /host/path/to/bak:/mnt/bak -v /host/path/to/output:/mnt/csv mssql-bak2csv [options]" --nolog
+    display "" --nolog
+    display "Options:" --nolog
+    display "  --bak-file FILENAME       Name of the BAK file in the mounted directory (optional if only one .bak file exists)" --nolog
+    display "  --tables TABLE1,TABLE2    Comma-separated list of tables to export (default: all)" --nolog
+    display "                           Format: [database.]table_name" --nolog
+    display "  --prefix PREFIX           Prefix to add to CSV filenames (e.g., 'ABC1_AB_')" --nolog
+    display "  --suffix SUFFIX           Suffix to add to CSV filenames (e.g., '_backup')" --nolog
+    display "  --help                    Show this help message" --nolog
+    display "" --nolog
+    display "Examples:" --nolog
+    display "  docker run -v /data:/mnt/bak -v /data/output:/mnt/csv mssql-bak2csv" --nolog
+    display "  docker run -v /data:/mnt/bak -v /data/output:/mnt/csv mssql-bak2csv --bak-file database.bak" --nolog
+    display "  docker run -v /data:/mnt/bak -v /data/output:/mnt/csv mssql-bak2csv --bak-file database.bak --tables table1,table2" --nolog
+    display "  docker run -v /data:/mnt/bak -v /data/output:/mnt/csv mssql-bak2csv --prefix 'ABC1_AB_' --suffix '_backup'" --nolog
 }

@@ -13,22 +13,22 @@ execute_sql_query() {
 start_sql_server() {
     mkdir -p "/var/opt/mssql/log"
     
-    echo -n "Starting SQL Server"
+    display -n "Starting SQL Server..."
     /opt/mssql/bin/sqlservr > /var/opt/mssql/log/startup.log 2>&1 &
     export SQL_PID=$!
     
     for i in {1..60}; do
         if execute_sql_query "" "SELECT 1" > /dev/null 2>&1; then
-            echo -e "\nSQL Server is ready!"
+            display -e "\nSQL Server is ready!"
             return 0
         fi
         
         if [[ $i -eq 60 ]]; then
-            echo -e "\nSQL Server failed to start within 60 seconds"
+            display -e "\nSQL Server failed to start within 60 seconds"
             return 1
         fi
         
-        echo -n "."
+        display -n "." --nolog
         sleep 1
     done
 }
@@ -56,13 +56,13 @@ restore_database() {
     WITH MOVE '$data_file' TO '/var/opt/mssql/data/${db_name}.mdf',
          MOVE '$log_file' TO '/var/opt/mssql/data/${db_name}.ldf',
          REPLACE" 2>&1); then
-        println "$output"
+        display "$output"
         return 1
     fi
     
     # Check for SQL errors in output even if the command succeeded
     if echo "$output" | grep -q "Msg [0-9]*, Level [0-9]*, State"; then
-        println "$output"
+        display "$output"
         return 1
     fi
     
@@ -74,13 +74,13 @@ process_database_restore() {
     local db_name="$2"
     
     print_section "Database Restore" "-"
-    println "🔄 Restoring database '$db_name' from '$(basename "$bak_file")'..."
+    display "🔄 Restoring database '$db_name' from '$(basename "$bak_file")'..."
     
     if ! restore_database "$bak_file" "$db_name"; then
-        println "❌ Failed to restore database"
+        display "❌ Failed to restore database"
         return 1
     fi
     
-    println "✅ Database '$db_name' restored successfully!"
+    display "✅ Database '$db_name' restored successfully!"
     return 0
 }
