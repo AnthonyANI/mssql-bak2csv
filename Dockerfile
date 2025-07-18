@@ -32,7 +32,7 @@ RUN mkdir -p /var/opt/mssql/backup /var/opt/mssql/data
 WORKDIR /opt/mssql-bak2csv
 
 # Copy scripts to container
-COPY --chmod=0755 entrypoint.sh functions.sh ./
+COPY --chmod=0755 entrypoint.sh logging.sh display.sh database.sh tables.sh export.sh files.sh ./
 
 # Set entrypoint
 ENTRYPOINT ["/opt/mssql-bak2csv/entrypoint.sh"]

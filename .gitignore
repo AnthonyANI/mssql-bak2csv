@@ -1,3 +1,7 @@
+# OS
+**/.DS_Store
+
+# Database files, logs, and output
 **/*.log
 **/*.bak
 **/*.csv
