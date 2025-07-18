@@ -34,7 +34,7 @@ log() {
 
 flush_log_buffer() {
     if [[ -n "$LOG_BUFFER" && -n "$LOG_FILE" ]]; then
-        echo -n "$LOG_BUFFER" >> "$LOG_FILE"
+        echo -ne "$LOG_BUFFER" >> "$LOG_FILE"
         LOG_BUFFER=""
         LOG_BUFFER_SIZE=0
     fi
@@ -55,9 +55,7 @@ start_flush_timer() {
 add_to_log_buffer() {
     local message="$1"
     
-    # Use printf to correctly interpret escape sequences
-    printf -v escaped_message "%b" "$message"
-    LOG_BUFFER="${LOG_BUFFER}${escaped_message}"$'\n'
+    LOG_BUFFER="${LOG_BUFFER}${message}"$'\n'
     LOG_BUFFER_SIZE=$((LOG_BUFFER_SIZE + 1))
     
     if [ "$LOG_BUFFER_SIZE" -ge "$MAX_BUFFER_SIZE" ]; then

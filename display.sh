@@ -2,6 +2,7 @@
 
 CURSOR_UP="\033[1A"
 CLEAR_LINE="\033[2K"
+CLEAR_LINE_TO_END="\033[K"
 CARRIAGE_RETURN="\r"
 
 # Display and UI functions
@@ -80,11 +81,11 @@ update_display() {
     table_display=$(get_table_status_text "$table_name" "${PREFIX}${table_name}${SUFFIX}.csv")
     progress_display=$(get_progress_bar_text "$current_table" "$total_tables" "$start_time")
     stats_display=$(printf '📈 Stats: ✅ %d exported, ❌ %d failed' "$success_count" "$failed_count")
-    
-    printf '%s\n' "$table_display"
-    printf '%s\n' "$progress_display"
-    printf '%s\n' "$stats_display"
-    
+
+    printf "%s$CLEAR_LINE_TO_END\n" "$table_display"
+    printf "%s$CLEAR_LINE_TO_END\n" "$progress_display"
+    printf "%s$CLEAR_LINE_TO_END\n" "$stats_display"
+
     DISPLAY_INITIALIZED=1
 }
 
