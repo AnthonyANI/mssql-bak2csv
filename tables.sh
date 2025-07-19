@@ -21,8 +21,8 @@ get_table_list_query() {
 
 filter_table_output() {
     local raw_output="$1"
-    echo "$raw_output" | grep -v "^$" | grep -v "^Msg" | 
-                         grep -v "^Invalid" | grep -v "^Sqlcmd:" | grep -v "^Changed database context"
+    echo "$raw_output" | grep -v "^$" | grep -v "^Msg" |
+        grep -v "^Invalid" | grep -v "^Sqlcmd:" | grep -v "^Changed database context"
 }
 
 list_tables() {
@@ -48,7 +48,7 @@ list_tables() {
 get_table_schema_and_name() {
     local database="$1"
     local table="$2"
-    
+
     local clean_table=${table//[\[\]]/}
     local found_table
 
@@ -59,11 +59,11 @@ get_table_schema_and_name() {
     WHERE LOWER(name) = LOWER('$clean_table') 
        OR OBJECT_ID(N'$clean_table') IS NOT NULL;
     " -h-1 -W | grep -v "^Msg" | grep -v "^$" | head -1 | tr -d '[:space:]')
-    
+
     if [ -z "$found_table" ]; then
         return 1
     fi
-    
+
     if [[ "$found_table" != *"."* ]]; then
         echo "dbo.$found_table"
     else
@@ -77,7 +77,7 @@ parse_table_info() {
     table_db=$(echo "$table_info" | cut -d'.' -f1)
     local table_name
     table_name=$(echo "$table_info" | cut -d'.' -f2)
-    
+
     if [ -n "$table_db" ] && [ -n "$table_name" ]; then
         echo "$table_db:$table_name"
         return 0
