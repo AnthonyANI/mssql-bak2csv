@@ -5,18 +5,14 @@ USER root
 RUN apt-get update && apt-get install -y \
     curl \
     gnupg \
-    unixodbc-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Install mssql-tools
-RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \
-    && curl https://packages.microsoft.com/config/ubuntu/20.04/prod.list > /etc/apt/sources.list.d/mssql-release.list \
+# Install sqlcmd (Go version)
+RUN curl https://packages.microsoft.com/keys/microsoft.asc | tee /etc/apt/trusted.gpg.d/microsoft.asc \
+    && echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/trusted.gpg.d/microsoft.asc] https://packages.microsoft.com/ubuntu/20.04/prod focal main" > /etc/apt/sources.list.d/mssql-release.list \
     && apt-get update \
-    && ACCEPT_EULA=Y apt-get install -y mssql-tools unixodbc-dev \
+    && apt-get install -y sqlcmd \
     && rm -rf /var/lib/apt/lists/*
-
-# Add SQL Server tools to PATH
-ENV PATH="$PATH:/opt/mssql-tools/bin"
 
 # Set environment variables for SQL Server
 ENV ACCEPT_EULA=Y
