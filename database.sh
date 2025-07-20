@@ -13,7 +13,7 @@ execute_sql_query() {
 start_sql_server() {
     mkdir -p "/var/opt/mssql/log"
 
-    display -n "Starting SQL Server..."
+    display -n "Starting SQL Server"
     /opt/mssql/bin/sqlservr >/var/opt/mssql/log/startup.log 2>&1 &
     export SQL_PID=$!
 
