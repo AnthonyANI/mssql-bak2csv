@@ -7,7 +7,7 @@ execute_sql_query() {
     local query="$2"
     shift 2
 
-    sqlcmd -S localhost -U sa -P "$SA_PASSWORD" ${database:+-d "$database"} -Q "$query" -C "$@"
+    sqlcmd -S localhost -U sa -P "$SA_PASSWORD" ${database:+-d "$database"} -Q "$query" "$@"
 }
 
 start_sql_server() {

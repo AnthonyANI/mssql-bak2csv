@@ -39,7 +39,7 @@ export_table_to_csv() {
     
     -- Output data
     SELECT * FROM [$schema].[$table_name];
-    " -h -1 -s "," -W -r 1 -o "$output_file" 2>/dev/null
+    " -o "$output_file" -h-1 -s"," -W -r1 2>/dev/null
 
     local status=$?
     local row_count=0
