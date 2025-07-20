@@ -62,6 +62,8 @@ restore_database() {
         return 1
     fi
 
+    log "$output"
+
     # Check for SQL errors in output even if the command succeeded
     if echo "$output" | grep -q "Msg [0-9]*, Level [0-9]*, State"; then
         display "$output"
