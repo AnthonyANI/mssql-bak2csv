@@ -24,7 +24,7 @@ start_sql_server() {
         fi
 
         if [[ $i -eq 60 ]]; then
-            display -e "\nSQL Server failed to start within 60 seconds"
+            display -e "\nSQL Server failed to start"
             return 1
         fi
 
