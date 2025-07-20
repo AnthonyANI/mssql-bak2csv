@@ -30,12 +30,9 @@ export_table_to_csv() {
     FROM INFORMATION_SCHEMA.COLUMNS 
     WHERE TABLE_NAME = '$table_name' AND TABLE_SCHEMA = '$schema'
     ORDER BY ORDINAL_POSITION;
-    
-    -- Remove trailing comma
-    IF LEN(@columns) > 0
-        SET @columns = LEFT(@columns, LEN(@columns) - 1);
-    ELSE
-        SET @columns = 'No_columns_found';
+
+    -- Remove trailing comma if present
+    IF RIGHT(@columns, 1) = ',' SET @columns = LEFT(@columns, LEN(@columns) - 1);
     
     -- Output header
     PRINT @columns;
