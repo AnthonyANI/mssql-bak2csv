@@ -21,25 +21,28 @@ export_table_to_csv() {
     schema=$(echo "$table_info" | cut -d. -f1)
     table_name=$(echo "$table_info" | cut -d. -f2)
 
-    execute_sql_query "$database" "
-    SET NOCOUNT ON;
-    
-    -- Get column names for header
-    DECLARE @columns NVARCHAR(MAX) = '';
-    SELECT @columns = @columns + COLUMN_NAME + ',' 
-    FROM INFORMATION_SCHEMA.COLUMNS 
-    WHERE TABLE_NAME = '$table_name' AND TABLE_SCHEMA = '$schema'
-    ORDER BY ORDINAL_POSITION;
+    local column_info
+    mapfile -t column_info < <(get_column_info "$database" "$table_name" "$schema")
 
-    -- Remove trailing comma if present
-    IF RIGHT(@columns, 1) = ',' SET @columns = LEFT(@columns, LEN(@columns) - 1);
-    
-    -- Output header
-    PRINT @columns;
-    
-    -- Output data
-    SELECT * FROM [$schema].[$table_name];
-    " -o "$output_file" -h-1 -s"," -W -r1 2>/dev/null
+    if [ ${#column_info[@]} -eq 0 ]; then
+        EXPORT_RUNNING=0
+        echo "1:0"
+        return 1
+    fi
+
+    # Extract column names for header
+    local columns=()
+    for info in "${column_info[@]}"; do
+        columns+=("$(echo "$info" | cut -d'|' -f1)")
+    done
+
+    write_csv_header "$output_file" "${columns[@]}"
+
+    local data_query
+    data_query=$(build_data_query "$schema" "$table_name" "${column_info[@]}")
+
+    # Export data to file
+    execute_sql_query "$database" "$data_query" -h-1 -s"," -W -r1 2>/dev/null >>"$output_file"
 
     local status=$?
     local row_count=0

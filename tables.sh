@@ -2,6 +2,20 @@
 
 # Table discovery and metadata functions
 
+get_column_info() {
+    local database="$1"
+    local table_name="$2"
+    local schema="$3"
+
+    execute_sql_query "$database" "
+        SET NOCOUNT ON;
+        SELECT COLUMN_NAME + '|' + DATA_TYPE
+        FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_NAME = '$table_name' AND TABLE_SCHEMA = '$schema'
+        ORDER BY ORDINAL_POSITION;
+    " -h-1 -s"," -W -r1 2>/dev/null
+}
+
 get_table_list_query() {
     echo "
     SET NOCOUNT ON;

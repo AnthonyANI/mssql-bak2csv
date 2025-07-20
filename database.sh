@@ -7,7 +7,7 @@ execute_sql_query() {
     local query="$2"
     shift 2
 
-    sqlcmd -S localhost -U sa -P "$SA_PASSWORD" ${database:+-d "$database"} -Q "$query" "$@"
+    sqlcmd -S localhost -U sa -P "$SA_PASSWORD" ${database:+-d"$database"} -Q "$query" "$@"
 }
 
 start_sql_server() {
@@ -35,7 +35,9 @@ start_sql_server() {
 
 get_database_name() {
     local bak_file="$1"
-    execute_sql_query "" "RESTORE FILELISTONLY FROM DISK = '$bak_file'" -h -1 | head -1 | awk '{print $1}'
+    local db_name
+    db_name=$(execute_sql_query "" "RESTORE FILELISTONLY FROM DISK = '$bak_file'" -h -1 | head -1 | awk '{print $1}')
+    echo "$db_name" | xargs
 }
 
 restore_database() {

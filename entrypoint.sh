@@ -6,6 +6,7 @@ source "${SCRIPT_DIR}/logging.sh"
 source "${SCRIPT_DIR}/display.sh"
 source "${SCRIPT_DIR}/database.sh"
 source "${SCRIPT_DIR}/tables.sh"
+source "${SCRIPT_DIR}/csv.sh"
 source "${SCRIPT_DIR}/export.sh"
 source "${SCRIPT_DIR}/files.sh"
 
