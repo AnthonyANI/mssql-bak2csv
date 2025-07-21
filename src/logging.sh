@@ -17,6 +17,7 @@ setup_logging() {
     display "============================================="
     display "MSSQL BAK to CSV Converter"
     display "$(date)"
+    display "📝 Log file: $(basename "$LOG_FILE")"
     display "============================================="
 
     start_flush_timer
@@ -65,9 +66,10 @@ add_to_log_buffer() {
 
 export EXPORT_RUNNING=0
 
-cleanup() {
-    display ""
-    display ""
+cleanup_and_exit() {
+    local exit_code=${1:-0}
+
+    reset_display
     display "⏹️ Cleaning up and exiting..."
 
     if [ $EXPORT_RUNNING -eq 1 ]; then
@@ -90,10 +92,10 @@ cleanup() {
     fi
 
     flush_log_buffer
-    exit 0
+    exit "${exit_code}"
 }
 
 setup_signal_handlers() {
     rm -f /tmp/cancel_export
-    trap cleanup SIGINT SIGTERM
+    trap 'cleanup_and_exit 0' SIGINT SIGTERM
 }

@@ -1,6 +1,7 @@
 #!/bin/bash
 
 CURSOR_UP="\033[1A"
+CURSOR_DOWN="\033[1B"
 CLEAR_LINE="\033[2K"
 CLEAR_LINE_TO_END="\033[K"
 CARRIAGE_RETURN="\r"
@@ -56,10 +57,20 @@ print_section() {
 DISPLAY_LINES=3
 DISPLAY_INITIALIZED=0
 
-reposition_cursor() {
-    for ((i = 0; i < DISPLAY_LINES; i++)); do
-        echo -ne "$CURSOR_UP$CARRIAGE_RETURN"
-    done
+reset_display() {
+    local reposition_only="${1:-false}"
+
+    if [ $DISPLAY_INITIALIZED -eq 1 ]; then
+        for ((i = 0; i < DISPLAY_LINES; i++)); do
+            if [ "$reposition_only" != "true" ]; then
+                echo -ne "$CURSOR_UP$CLEAR_LINE$CARRIAGE_RETURN"
+            else
+                echo -ne "$CURSOR_UP$CARRIAGE_RETURN"
+            fi
+        done
+
+        DISPLAY_INITIALIZED=0
+    fi
 }
 
 update_display() {
@@ -70,9 +81,7 @@ update_display() {
     local failed_count="$5"
     local start_time="$6"
 
-    if [ $DISPLAY_INITIALIZED -eq 1 ]; then
-        reposition_cursor
-    fi
+    reset_display true
 
     local table_display
     local progress_display

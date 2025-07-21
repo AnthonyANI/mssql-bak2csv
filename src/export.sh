@@ -62,6 +62,53 @@ export_table_to_csv() {
     echo "$status:$row_count"
 }
 
+filter_tables_by_user_selection() {
+    local all_tables="$1"
+    local user_tables="$2"
+
+    if [ -z "$user_tables" ]; then
+        # Return all tables if no filter is specified
+        echo "$all_tables"
+        return
+    fi
+
+    local filtered_tables=""
+    local IFS=','
+    read -ra selected_tables <<<"$user_tables"
+
+    local grep_pattern=""
+    for selected in "${selected_tables[@]}"; do
+        local trimmed_selected
+        trimmed_selected=$(echo "$selected" | xargs)
+        if [ -n "$grep_pattern" ]; then
+            grep_pattern="${grep_pattern}|"
+        fi
+        grep_pattern="${grep_pattern}(^|\.)\b${trimmed_selected}\b($|\.)"
+    done
+
+    local matching_tables
+    matching_tables=$(echo "$all_tables" | grep -E "$grep_pattern" || true)
+
+    if [ -n "$matching_tables" ]; then
+        filtered_tables="$matching_tables"
+    fi
+
+    for selected in "${selected_tables[@]}"; do
+        local trimmed_selected
+        trimmed_selected=$(echo "$selected" | xargs)
+        if ! echo "$matching_tables" | grep -qE "(^|\.)\b${trimmed_selected}\b($|\.)"; then
+            display "⚠️  Warning: Table '$trimmed_selected' not found in database"
+        fi
+    done
+
+    if [ -z "$filtered_tables" ]; then
+        display "❌ Error: None of the specified tables were found in database"
+        return 1
+    fi
+
+    echo "$filtered_tables"
+}
+
 export_tables() {
     local db_name="$1"
     local tables="$2"
@@ -120,11 +167,8 @@ export_tables() {
         fi
     done < <(echo "$tables")
 
-    if [ $DISPLAY_INITIALIZED -eq 1 ]; then
-        reposition_cursor
-    fi
+    reset_display
 
-    echo ""
     print_section "Export Complete" "-"
     display "✅ Exported $success_count tables successfully${failed_count:+, ❌ $failed_count tables failed}"
 }
@@ -141,6 +185,22 @@ process_database_export() {
     fi
 
     count_and_display_tables "$clean_tables"
-    export_tables "$db_name" "$clean_tables" "$output_path"
+
+    local export_tables="$clean_tables"
+    if [ -n "$TABLES" ]; then
+        print_section "Selected Tables" "-"
+        display "🔍 Filtering tables based on user selection: $TABLES"
+        display ""
+
+        if ! export_tables=$(filter_tables_by_user_selection "$clean_tables" "$TABLES"); then
+            return 1
+        fi
+
+        display ""
+        display "Selected tables for export:"
+        count_and_display_tables "$export_tables"
+    fi
+
+    export_tables "$db_name" "$export_tables" "$output_path"
     return $?
 }

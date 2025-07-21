@@ -36,12 +36,12 @@ parse_arguments() {
             ;;
         --help)
             show_usage
-            exit 0
+            cleanup_and_exit 0
             ;;
         *)
             display "Unknown option: $1"
             show_usage
-            exit 1
+            cleanup_and_exit 1
             ;;
         esac
     done
@@ -53,13 +53,13 @@ main() {
     parse_arguments "$@"
 
     if ! find_bak_file; then
-        exit 1
+        cleanup_and_exit 1
     fi
 
     print_section "SQL Server" "-"
     if ! start_sql_server; then
         display "Failed to start SQL Server"
-        exit 1
+        cleanup_and_exit 1
     fi
 
     local DB_NAME
@@ -69,25 +69,25 @@ main() {
     DB_NAME=$(get_database_name "$CONTAINER_BAK_FILE")
     if [ -z "$DB_NAME" ]; then
         display "Failed to get database name from BAK file"
-        exit 1
+        cleanup_and_exit 1
     fi
 
     INTERNAL_BAK_FILE=$(prepare_bak_file "$CONTAINER_BAK_FILE")
     if [ -z "$INTERNAL_BAK_FILE" ] || [ ! -f "$INTERNAL_BAK_FILE" ]; then
         display "Failed to prepare BAK file for SQL Server"
-        exit 1
+        cleanup_and_exit 1
     fi
 
     if ! process_database_restore "$INTERNAL_BAK_FILE" "$DB_NAME"; then
-        exit 1
+        cleanup_and_exit 1
     fi
 
     OUTPUT_PATH=$(determine_output_dir)
     if ! process_database_export "$DB_NAME" "$OUTPUT_PATH"; then
-        exit 1
+        cleanup_and_exit 1
     fi
 
-    display "📝 Log file: $LOG_FILE"
+    cleanup_and_exit 0
 }
 
 main "$@"
