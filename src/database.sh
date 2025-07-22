@@ -7,7 +7,7 @@ execute_sql_query() {
     local query="$2"
     shift 2
 
-    sqlcmd -S localhost -U sa -P "$SA_PASSWORD" ${database:+-d"$database"} -C -Q "$query" "$@"
+    sqlcmd -S localhost -U sa -P "$SA_PASSWORD" ${database:+-d"$database"} -y 0 -C -X 1 -Q "$query" "$@"
 }
 
 start_sql_server() {
@@ -36,7 +36,7 @@ start_sql_server() {
 get_database_name() {
     local bak_file="$1"
     local db_name
-    db_name=$(execute_sql_query "" "RESTORE FILELISTONLY FROM DISK = '$bak_file'" -h -1 | head -1 | awk '{print $1}')
+    db_name=$(execute_sql_query "" "RESTORE FILELISTONLY FROM DISK = '$bak_file'" | head -1 | awk '{print $1}')
     echo "$db_name" | xargs
 }
 
@@ -45,7 +45,7 @@ restore_database() {
     local db_name="$2"
 
     local logical_files
-    logical_files=$(execute_sql_query "" "RESTORE FILELISTONLY FROM DISK = '$bak_file'" -h -1)
+    logical_files=$(execute_sql_query "" "RESTORE FILELISTONLY FROM DISK = '$bak_file'")
     local data_file
     local log_file
     data_file=$(echo "$logical_files" | grep -E '\s+D\s+' | head -1 | awk '{print $1}')

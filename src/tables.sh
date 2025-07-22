@@ -13,7 +13,7 @@ get_column_info() {
         FROM INFORMATION_SCHEMA.COLUMNS
         WHERE TABLE_NAME = '$table_name' AND TABLE_SCHEMA = '$schema'
         ORDER BY ORDINAL_POSITION;
-    " -h-1 -s"," -W -r1 2>/dev/null
+    " -s"," -r1 2>/dev/null
 }
 
 get_table_list_query() {
@@ -41,7 +41,7 @@ filter_table_output() {
 
 list_tables() {
     local tables
-    tables=$(execute_sql_query "" "$(get_table_list_query)" -h-1 -s"," -W -r1)
+    tables=$(execute_sql_query "" "$(get_table_list_query)" -s"," -r1)
 
     if ! echo "$tables" | grep -q "\."; then
         display "Error: Failed to list tables."
@@ -72,7 +72,7 @@ get_table_schema_and_name() {
     FROM sys.tables 
     WHERE LOWER(name) = LOWER('$clean_table') 
        OR OBJECT_ID(N'$clean_table') IS NOT NULL;
-    " -h-1 -W | grep -v "^Msg" | grep -v "^$" | head -1 | tr -d '[:space:]')
+    " | grep -v "^Msg" | grep -v "^$" | head -1 | tr -d '[:space:]')
 
     if [ -z "$found_table" ]; then
         return 1

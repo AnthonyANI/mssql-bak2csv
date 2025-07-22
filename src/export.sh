@@ -52,7 +52,7 @@ export_table_to_csv() {
 
     # Export data to file
     local error_output
-    error_output=$(execute_sql_query "$database" "$data_query" -h-1 -s"," -W -r1 2>&1 1>>"$output_file")
+    error_output=$(execute_sql_query "$database" "$data_query" -s"," -r1 2>&1 1>>"$output_file")
     
     local status=$?
     local row_count=0
@@ -198,8 +198,6 @@ export_tables() {
     done < <(echo "$tables")
 
     reset_display
-
-    print_section "Export Complete" "-"
     display "✅ Exported $success_count tables successfully${failed_count:+, ❌ $failed_count tables failed}"
 }
 
