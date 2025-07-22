@@ -126,28 +126,31 @@ get_table_status_text() {
 }
 
 get_progress_bar_text() {
-    local current="$1"
+    local processed="$1"
     local total="$2"
     local start_time="$3"
 
-    local progress=$((current * 100 / total))
+    local progress=0
+    if [ "$total" -gt 0 ]; then
+        progress=$((processed * 100 / total))
+    fi
 
     local bar_width=30
     local completed_width=$((bar_width * progress / 100))
     local remaining_width=$((bar_width - completed_width))
 
     local time_estimate=""
-    if [ "$current" -gt 1 ]; then
+    if [ "$processed" -gt 0 ]; then
         local current_time
         current_time=$(date +%s)
         local elapsed=$((current_time - start_time))
-        local avg_time_per_table=$((elapsed * 100 / current))
-        local est_remaining=$((avg_time_per_table * (total - current) / 100))
+        local avg_time_per_table=$((elapsed * 100 / processed))
+        local est_remaining=$((avg_time_per_table * (total - processed) / 100))
         local remaining_min=$((est_remaining / 60))
         local remaining_sec=$((est_remaining % 60))
 
         time_estimate=" (est. ${remaining_min}m ${remaining_sec}s remaining)"
     fi
 
-    echo "📊 Progress: [$(printf '%*s' "$completed_width" "" | tr ' ' '#')$(printf '%*s' "$remaining_width" "" | tr ' ' '.')] $progress% ($current/$total tables)$time_estimate"
+    echo "📊 Progress: [$(printf '%*s' "$completed_width" "" | tr ' ' '#')$(printf '%*s' "$remaining_width" "" | tr ' ' '.')] $progress% ($processed/$total tables)$time_estimate"
 }

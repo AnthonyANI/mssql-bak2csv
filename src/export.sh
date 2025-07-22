@@ -138,6 +138,8 @@ export_tables() {
 
     DISPLAY_INITIALIZED=0
 
+    update_display 0 "$total_tables" "" "$success_count" "$failed_count" "$start_time"
+
     while read -r table_info; do
         if [ -f "/tmp/cancel_export" ]; then
             display "\nExport cancelled."
@@ -154,7 +156,7 @@ export_tables() {
             if [ -n "$table_db" ] && [ -n "$table_name" ]; then
                 current_table=$((current_table + 1))
 
-                update_display "$current_table" "$total_tables" "$table_name" \
+                update_display $((success_count + failed_count)) "$total_tables" "$table_name" \
                     "$success_count" "$failed_count" "$start_time"
 
                 local result
@@ -166,12 +168,15 @@ export_tables() {
                 row_count=$(echo "$result" | cut -d':' -f2)
 
                 if [ "$status" -eq 0 ]; then
-                    log "✅ Exported ${table_db}.${table_name} ($row_count rows)"
+                    log "✅ Exported ${table_db}.${table_name} as $(basename "$output_path") ($row_count rows)"
                     success_count=$((success_count + 1))
                 else
                     log "❌ Failed: ${table_db}.${table_name}"
                     failed_count=$((failed_count + 1))
                 fi
+
+                update_display $((success_count + failed_count)) "$total_tables" "$table_name" \
+                    "$success_count" "$failed_count" "$start_time"
             fi
         fi
     done < <(echo "$tables")
