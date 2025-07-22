@@ -59,14 +59,14 @@ CSV files are named using the simplest format that avoids collisions:
 
 ## Notes
 
-- The container uses SQL Server Express (free, no licensing required)
+- The container uses SQL Server Developer edition by default (not licensed for production use)
 - Mounts: backup directory to `/mnt/bak`, optional output directory to `/mnt/csv`
 - Database restoration is temporary - only CSV files persist between runs
 
 ## Licensing
 
-This project uses the official Microsoft SQL Server container image (`mcr.microsoft.com/mssql/server:2022-latest`) and Microsoft SQL Server tools (`mssql-tools`, `sqlcmd`). By using this image and these tools, you agree to the [Microsoft SQL Server End User License Agreement (EULA)](https://go.microsoft.com/fwlink/?linkid=857698) and the [mssql-tools EULA](https://docs.microsoft.com/sql/tools/sqlcmd-utility?view=sql-server-ver16#license).
+This project uses the official Microsoft SQL Server container image (`mcr.microsoft.com/mssql/server:2022-latest`) and Microsoft SQL Server tools (`mssql-tools`, `sqlcmd`). By using this image and these tools, you agree to the [Microsoft SQL Server End User License Agreement (EULA)](https://go.microsoft.com/fwlink/?linkid=857698).
 
-The default configuration uses SQL Server Express edition, which is free for production and development use. For other editions, review Microsoft's licensing terms.
+The default configuration uses SQL Server Developer edition, which is licensed for development and testing only—not for production workloads. To use another edition, set the `MSSQL_PID` environment variable as described in the [SQL Server container documentation](https://learn.microsoft.com/sql/linux/sql-server-linux-configure-environment-variables?view=sql-server-ver16).
 
 This project itself is provided under the MIT License (see LICENSE file).
