@@ -99,3 +99,13 @@ parse_table_info() {
         return 1
     fi
 }
+
+count_and_display_tables() {
+    local clean_tables="$1"
+
+    local table_count=0
+    while IFS= read -r table_info; do
+        table_count=$((table_count + 1))
+        display "$table_count. $table_info"
+    done <<<"$clean_tables"
+}

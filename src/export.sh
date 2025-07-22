@@ -2,6 +2,15 @@
 
 # CSV export functionality
 
+write_csv_header() {
+    local output_file="$1"
+    shift
+    local columns=("$@")
+
+    IFS=','
+    echo "${columns[*]}" >"$output_file"
+}
+
 export_table_to_csv() {
     EXPORT_RUNNING=1
     local database="$1"

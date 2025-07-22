@@ -151,31 +151,3 @@ get_progress_bar_text() {
 
     echo "📊 Progress: [$(printf '%*s' "$completed_width" "" | tr ' ' '#')$(printf '%*s' "$remaining_width" "" | tr ' ' '.')] $progress% ($current/$total tables)$time_estimate"
 }
-
-count_and_display_tables() {
-    local clean_tables="$1"
-
-    local table_count=0
-    while IFS= read -r table_info; do
-        table_count=$((table_count + 1))
-        display "$table_count. $table_info"
-    done <<<"$clean_tables"
-}
-
-show_usage() {
-    display "Usage: docker run -v /host/path/to/bak:/mnt/bak -v /host/path/to/output:/mnt/csv mssql-bak2csv [options]" --nolog
-    display "" --nolog
-    display "Options:" --nolog
-    display "  --bak-file FILENAME       Name of the BAK file in the mounted directory (optional if only one .bak file exists)" --nolog
-    display "  --tables TABLE1,TABLE2    Comma-separated list of tables to export (default: all)" --nolog
-    display "                           Format: [database.]table_name" --nolog
-    display "  --prefix PREFIX           Prefix to add to CSV filenames (e.g., 'ABC1_AB_')" --nolog
-    display "  --suffix SUFFIX           Suffix to add to CSV filenames (e.g., '_backup')" --nolog
-    display "  --help                    Show this help message" --nolog
-    display "" --nolog
-    display "Examples:" --nolog
-    display "  docker run -v /data:/mnt/bak -v /data/output:/mnt/csv mssql-bak2csv" --nolog
-    display "  docker run -v /data:/mnt/bak -v /data/output:/mnt/csv mssql-bak2csv --bak-file database.bak" --nolog
-    display "  docker run -v /data:/mnt/bak -v /data/output:/mnt/csv mssql-bak2csv --bak-file database.bak --tables table1,table2" --nolog
-    display "  docker run -v /data:/mnt/bak -v /data/output:/mnt/csv mssql-bak2csv --prefix 'ABC1_AB_' --suffix '_backup'" --nolog
-}

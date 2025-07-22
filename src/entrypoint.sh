@@ -4,11 +4,29 @@ SCRIPT_DIR="$(dirname "$0")"
 
 source "${SCRIPT_DIR}/logging.sh"
 source "${SCRIPT_DIR}/display.sh"
+source "${SCRIPT_DIR}/process.sh"
 source "${SCRIPT_DIR}/database.sh"
 source "${SCRIPT_DIR}/tables.sh"
-source "${SCRIPT_DIR}/csv.sh"
 source "${SCRIPT_DIR}/export.sh"
 source "${SCRIPT_DIR}/files.sh"
+
+show_usage() {
+    display "Usage: docker run -v /host/path/to/bak:/mnt/bak -v /host/path/to/output:/mnt/csv mssql-bak2csv [options]" --nolog
+    display "" --nolog
+    display "Options:" --nolog
+    display "  --bak-file FILENAME       Name of the BAK file in the mounted directory (optional if only one .bak file exists)" --nolog
+    display "  --tables TABLE1,TABLE2    Comma-separated list of tables to export (default: all)" --nolog
+    display "                           Format: [database.]table_name" --nolog
+    display "  --prefix PREFIX           Prefix to add to CSV filenames (e.g., 'ABC1_AB_')" --nolog
+    display "  --suffix SUFFIX           Suffix to add to CSV filenames (e.g., '_backup')" --nolog
+    display "  --help                    Show this help message" --nolog
+    display "" --nolog
+    display "Examples:" --nolog
+    display "  docker run -v /data:/mnt/bak -v /data/output:/mnt/csv mssql-bak2csv" --nolog
+    display "  docker run -v /data:/mnt/bak -v /data/output:/mnt/csv mssql-bak2csv --bak-file database.bak" --nolog
+    display "  docker run -v /data:/mnt/bak -v /data/output:/mnt/csv mssql-bak2csv --bak-file database.bak --tables table1,table2" --nolog
+    display "  docker run -v /data:/mnt/bak -v /data/output:/mnt/csv mssql-bak2csv --prefix 'ABC1_AB_' --suffix '_backup'" --nolog
+}
 
 parse_arguments() {
     export BAK_FILE=""
