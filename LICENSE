@@ -1,0 +1,4 @@
+...MIT license text...
+
+Note: This project uses Microsoft SQL Server container images and tools.
+Use of these components is subject to the [Microsoft SQL Server End User License Agreement (EULA)](https://go.microsoft.com/fwlink/?linkid=857698) and the [mssql-tools EULA](https://docs.microsoft.com/sql/tools/sqlcmd-utility?view=sql-server-ver16#license).
