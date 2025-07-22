@@ -102,8 +102,8 @@ build_data_query() {
         col=$(echo "$info" | cut -d'|' -f1)
         data_type=$(echo "$info" | cut -d'|' -f2)
 
-        if [[ "$data_type" =~ ^(binary|varbinary|image)$ ]]; then
-            # For binary types, just select the column without transformation
+        if [[ "$data_type" =~ ^(binary|varbinary|image|float)$ ]]; then
+            # For raw data and float types, just select the column without transformation
             select_exprs+=(
                 "[${col}]"
             )

@@ -84,7 +84,7 @@ export_table_to_csv() {
     fi
 
     EXPORT_RUNNING=0
-    echo "$status:$row_count"
+    echo "$status:$row_count:$output_file"
 }
 
 filter_tables_by_user_selection() {
@@ -178,13 +178,15 @@ export_tables() {
                 local result
                 local status
                 local row_count
+                local output_file
 
                 result=$(export_table_to_csv "$table_db" "$table_name" "$output_path")
                 status=$(echo "$result" | cut -d':' -f1)
                 row_count=$(echo "$result" | cut -d':' -f2)
+                output_file=$(echo "$result" | cut -d':' -f3-)
 
                 if [ "$status" -eq 0 ]; then
-                    log "✅ Exported ${table_db}.${table_name} as $(basename "$output_path") ($row_count rows)"
+                    log "✅ Exported ${table_db}.${table_name} as $(basename "$output_file") ($row_count rows)"
                     success_count=$((success_count + 1))
                 else
                     log "❌ Failed: ${table_db}.${table_name}"
