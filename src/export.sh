@@ -51,20 +51,36 @@ export_table_to_csv() {
     data_query=$(build_data_query "$schema" "$table_name" "${column_info[@]}")
 
     # Export data to file
-    execute_sql_query "$database" "$data_query" -h-1 -s"," -W -r1 2>/dev/null >>"$output_file"
-
+    local error_output
+    error_output=$(execute_sql_query "$database" "$data_query" -h-1 -s"," -W -r1 2>&1 1>>"$output_file")
+    
     local status=$?
     local row_count=0
 
     if [ -f "$output_file" ]; then
-        if grep -q "Invalid object name\|Msg [0-9]*, Level [0-9]*, State" "$output_file"; then
+        if grep -q "Msg [0-9]*, Level [0-9]*, State" "$output_file"; then
             status=1
+            log "SQL error in output file for $table: $(grep -E 'Msg [0-9]*, Level [0-9]*, State' "$output_file" | head -1)"
+        elif [ -n "$error_output" ]; then
+            status=1
+            log "SQL error for $table: ${error_output:0:200}${#error_output>200?'...':''}"
         else
-            row_count=$(($(wc -l <"$output_file") - 1))
-            [ $row_count -lt 0 ] && row_count=0
+            # Check for a valid CSV output (at least header row)
+            if [ "$(wc -l < "$output_file")" -ge 1 ]; then
+                row_count=$(($(wc -l <"$output_file") - 1))
+                [ $row_count -lt 0 ] && row_count=0
+            else
+                status=1
+                log "Empty or invalid CSV file for $table"
+            fi
         fi
     else
         status=1
+        if [ -n "$error_output" ]; then
+            log "SQL error (no output file) for $table: ${error_output:0:200}${#error_output>200?'...':''}"
+        else
+            log "Failed to create output file for $table (unknown error)"
+        fi
     fi
 
     EXPORT_RUNNING=0
