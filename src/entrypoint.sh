@@ -10,6 +10,21 @@ source "${SCRIPT_DIR}/tables.sh"
 source "${SCRIPT_DIR}/export.sh"
 source "${SCRIPT_DIR}/files.sh"
 
+generate_random_password() {
+    # At least 1 uppercase, 1 lowercase, 1 digit, 1 symbol, min 12 chars
+    local upper lower digit symbol rest
+    upper=$(tr -dc '[:upper:]' < /dev/urandom | head -c1)
+    lower=$(tr -dc '[:lower:]' < /dev/urandom | head -c1)
+    digit=$(tr -dc '[:digit:]' < /dev/urandom | head -c1)
+    symbol=$(tr -dc '[:punct:]' < /dev/urandom | head -c1)
+    rest=$(tr -dc '[:alnum:][:punct:]' < /dev/urandom | head -c8)
+    echo "${upper}${lower}${digit}${symbol}${rest}"
+}
+
+if [[ -z "$MSSQL_SA_PASSWORD" ]]; then
+    export MSSQL_SA_PASSWORD="$(generate_random_password)"
+fi
+
 show_usage() {
     display "Usage: docker run -v /host/path/to/bak:/mnt/bak -v /host/path/to/output:/mnt/csv mssql-bak2csv [options]" --nolog
     display "" --nolog

@@ -7,17 +7,25 @@ execute_sql_query() {
     local query="$2"
     shift 2
 
-    sqlcmd -S localhost -U sa -P "$SA_PASSWORD" ${database:+-d"$database"} -y 0 -C -X 1 -Q "$query" "$@"
+    sqlcmd -S localhost -U sa -P "$MSSQL_SA_PASSWORD" ${database:+-d"$database"} -y 0 -C -X 1 -Q "$query" "$@"
 }
 
 start_sql_server() {
     mkdir -p "/var/opt/mssql/log"
 
     display -n "Starting SQL Server"
-    /opt/mssql/bin/sqlservr >/var/opt/mssql/log/startup.log 2>&1 &
+    /opt/mssql/bin/sqlservr >/dev/null 2>&1 &
     export SQL_PID=$!
 
     for i in {1..60}; do
+        if ! kill -0 $SQL_PID 2>/dev/null; then
+            display -e "\nSQL Server process exited unexpectedly"
+            if [ -f /var/opt/mssql/log/errorlog ]; then
+                log "$(cat /var/opt/mssql/log/errorlog)"
+            fi
+            return 1
+        fi
+
         if execute_sql_query "" "SELECT 1" >/dev/null 2>&1; then
             display -e "\nSQL Server is ready!"
             return 0
@@ -25,6 +33,9 @@ start_sql_server() {
 
         if [[ $i -eq 60 ]]; then
             display -e "\nSQL Server failed to start"
+            if [ -f /var/opt/mssql/log/errorlog ]; then
+                log "$(cat /var/opt/mssql/log/errorlog)"
+            fi
             return 1
         fi
 

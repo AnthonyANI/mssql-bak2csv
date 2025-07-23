@@ -87,6 +87,20 @@ Values that contain the delimiting character (`,`), line breaks, or quotes are q
 - Mounts: backup directory to `/mnt/bak`, optional output directory to `/mnt/csv`
 - Database restoration is temporary - only CSV files persist between runs
 
+### SQL Server Password
+
+By default, the container generates a secure random password for the SQL Server `sa` user at runtime.  
+To specify your own password, set the `MSSQL_SA_PASSWORD` environment variable when running the container:
+
+```bash
+docker run --rm \
+  -e MSSQL_SA_PASSWORD='YourSecurePassword123!' \
+  -v /path/to/backup/directory:/mnt/bak \
+  mssql-bak2csv
+```
+
+The password must meet SQL Server complexity requirements (at least 8 characters, including uppercase, lowercase, number, and symbol).
+
 ## Licensing
 
 This project uses the official Microsoft SQL Server container image (`mcr.microsoft.com/mssql/server:2022-latest`) and Microsoft SQL Server tools (`mssql-tools`, `sqlcmd`). By using this image and these tools, you agree to the [Microsoft SQL Server End User License Agreement (EULA)](https://go.microsoft.com/fwlink/?linkid=857698).

@@ -12,7 +12,6 @@ ENV PATH="$PATH:/opt/mssql-tools18/bin"
 
 # Set environment variables for SQL Server
 ENV ACCEPT_EULA=Y
-ENV SA_PASSWORD=MSSQL_bak2csv!
 ENV MSSQL_PID=Developer
 
 # Create directories for mounting
