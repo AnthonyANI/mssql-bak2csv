@@ -2,13 +2,12 @@
 
 Docker container that converts SQL Server backup files (.bak) to CSV.
 
-## Quick Start
+## Usage
 
 ```bash
 # Basic usage (auto-detect BAK file)
 docker run --rm \
   -v /path/to/backup/directory:/mnt/bak \
-  -v /path/to/output/directory:/mnt/csv \
   mssql-bak2csv
 
 # Specify BAK file and tables
@@ -28,6 +27,9 @@ docker run --rm \
 - Lists and exports tables to CSV format
 - Supports selective table export
 - Handles multiple databases and schemas
+- Properly quotes and escapes values in CSV output
+- Distinguishes between SQL `NULL`, the string `"null"`, and empty strings
+- Outputs CSV files with configurable prefixes and suffixes
 
 ## Usage Options
 
@@ -53,6 +55,12 @@ CSV files are named using the simplest format that avoids collisions:
 
 ## Value Handling in CSV Output
 
+### Raw Values
+
+Data values, such as images and binary, and floats are exported from sqlcmd as-is to avoid mangling by casting or converting or truncating them.
+
+### Distinguishing Between SQL NULL, "null", and Empty Strings
+
 To ensure reliable parsing and distinction between SQL `NULL`, the string `"null"` (case-insensitive), and empty strings, the export logic encodes these values as follows:
 
 - SQL `NULL` values are exported as an empty field (i.e., nothing between the commas: `,,`).
@@ -60,6 +68,12 @@ To ensure reliable parsing and distinction between SQL `NULL`, the string `"null
 - Empty strings are exported as `""` (two double quotes), distinguishing them from null values
 
 This helps ensure consumers of the CSV can always distinguish between a true SQL `NULL`, a string containing `"null"`, and an empty string.
+
+### All Other Values
+
+Values that contain the delimiting character (`,`), line breaks, or quotes are quoted and escaped as follows:
+1. Replace any quotes (`"`) in the value with two quotes (`""`).
+2. Wrap the value in quotes (`"`).
 
 ## Requirements
 
