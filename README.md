@@ -2,25 +2,6 @@
 
 Docker container that converts SQL Server backup files (.bak) to CSV.
 
-## Usage
-
-```bash
-# Basic usage (auto-detect BAK file)
-docker run --rm \
-  -v /path/to/backup/directory:/mnt/bak \
-  mssql-bak2csv
-
-# Specify BAK file and tables
-docker run --rm \
-  -v /path/to/backup/directory:/mnt/bak \
-  -v /path/to/output/directory:/mnt/csv \
-  mssql-bak2csv \
-  --bak-file your-database.bak \
-  --tables "table1,table2,table3" \
-  --prefix "prefix_" \
-  --suffix "_backup"
-```
-
 ## Features
 
 - Restores MSSQL .bak files to a temporary SQL Server instance
@@ -31,6 +12,31 @@ docker run --rm \
 - Distinguishes between SQL `NULL`, the string `"null"`, and empty strings
 - Outputs CSV files with configurable prefixes and suffixes
 
+## Requirements
+
+- Docker
+- Sufficient disk space and memory for database restoration
+- .bak file compatible with/upgradable to SQL Server 2022
+
+## Usage
+
+```bash
+# Basic usage (auto-detect BAK file, output all tables to mounted bak path)
+docker run --rm \
+  -v /path/to/backup/directory:/mnt/bak \
+  mssql-bak2csv
+
+# Use specified bak file, output selected tables to mounted csv path with given prefix and suffix
+docker run --rm \
+  -v /path/to/backup/directory:/mnt/bak \
+  -v /path/to/output/directory:/mnt/csv \
+  mssql-bak2csv \
+  --bak-file your-database.bak \
+  --tables "table1,table2,table3" \
+  --prefix "prefix_" \
+  --suffix "_backup"
+```
+
 ## Usage Options
 
 - `--bak-file FILENAME`: Name of the .bak file (optional if only one exists)
@@ -39,7 +45,7 @@ docker run --rm \
 - `--suffix SUFFIX`: Suffix for CSV filenames (e.g., '_backup')
 - `--help`: Show usage information
 
-## Table Selection Formats
+### Table Selection Formats
 
 - Simple name: `table1` (uses default database and schema)
 - With database: `mydatabase.table1` (specifies database, uses default schema)
@@ -74,12 +80,6 @@ This helps ensure consumers of the CSV can always distinguish between a true SQL
 Values that contain the delimiting character (`,`), line breaks, or quotes are quoted and escaped as follows:
 1. Replace any quotes (`"`) in the value with two quotes (`""`).
 2. Wrap the value in quotes (`"`).
-
-## Requirements
-
-- Docker
-- Sufficient disk space and memory for database restoration
-- .bak file compatible with/upgradable to SQL Server 2022
 
 ## Notes
 
