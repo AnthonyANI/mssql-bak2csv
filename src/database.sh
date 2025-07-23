@@ -112,9 +112,9 @@ build_data_query() {
             select_exprs+=(
                 "CASE
                     WHEN [${col}] IS NULL THEN ''
-                    WHEN CAST([${col}] AS NVARCHAR(MAX)) = 'NULL' THEN '\"NULL\"'
                     WHEN CAST([${col}] AS NVARCHAR(MAX)) = '' THEN '\"\"'
-                    WHEN CHARINDEX(',', [${col}]) > 0
+                    WHEN LOWER(CAST([${col}] AS NVARCHAR(MAX))) = 'null'
+                        OR CHARINDEX(',', [${col}]) > 0
                         OR CHARINDEX(CHAR(10), [${col}]) > 0
                         OR CHARINDEX(CHAR(13), [${col}]) > 0
                         OR CHARINDEX('\"', [${col}]) > 0

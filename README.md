@@ -1,6 +1,6 @@
 # MSSQL BAK to CSV Converter
 
-Docker container that converts SQL Server backup files (.bak) to CSV by restoring the database and exporting tables.
+Docker container that converts SQL Server backup files (.bak) to CSV.
 
 ## Quick Start
 
@@ -50,6 +50,16 @@ CSV files are named using the simplest format that avoids collisions:
 - `[PREFIX]{table}[SUFFIX].csv` (e.g., `Users.csv`)
 - `[PREFIX]{schema}_{table}[SUFFIX].csv` (e.g., `dbo_Users.csv`)
 - `[PREFIX]{database}_{schema}_{table}[SUFFIX].csv` (e.g., `MyDB_dbo_Users.csv`)
+
+## Value Handling in CSV Output
+
+To ensure reliable parsing and distinction between SQL `NULL`, the string `"null"` (case-insensitive), and empty strings, the export logic encodes these values as follows:
+
+- SQL `NULL` values are exported as an empty field (i.e., nothing between the commas: `,,`).
+- The string value `"null"` (case-insensitive, e.g., `"NULL"`, `"Null"`, `"null"`) is always quoted and escaped (unless trailing or leading whitespace is present, in which case the value should be parsed as a string)
+- Empty strings are exported as `""` (two double quotes), distinguishing them from null values
+
+This helps ensure consumers of the CSV can always distinguish between a true SQL `NULL`, a string containing `"null"`, and an empty string.
 
 ## Requirements
 
