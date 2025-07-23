@@ -108,9 +108,19 @@ build_data_query() {
                 "[${col}]"
             )
         else
-            # For text types, apply CSV escaping and quoting
+            # For all other types, cast to NVARCHAR and apply CSV formatting and escaping as needed
             select_exprs+=(
-                "CASE WHEN CHARINDEX(',', [${col}]) > 0 OR CHARINDEX(CHAR(10), [${col}]) > 0 OR CHARINDEX(CHAR(13), [${col}]) > 0 OR CHARINDEX('\"', [${col}]) > 0 THEN '\"' + REPLACE(ISNULL(CAST([${col}] AS NVARCHAR(MAX)), ''), '\"', '\"\"') + '\"' ELSE ISNULL(CAST([${col}] AS NVARCHAR(MAX)), '') END AS [${col}]"
+                "CASE
+                    WHEN [${col}] IS NULL THEN ''
+                    WHEN CAST([${col}] AS NVARCHAR(MAX)) = 'NULL' THEN '\"NULL\"'
+                    WHEN CAST([${col}] AS NVARCHAR(MAX)) = '' THEN '\"\"'
+                    WHEN CHARINDEX(',', [${col}]) > 0
+                        OR CHARINDEX(CHAR(10), [${col}]) > 0
+                        OR CHARINDEX(CHAR(13), [${col}]) > 0
+                        OR CHARINDEX('\"', [${col}]) > 0
+                            THEN '\"' + REPLACE(CAST([${col}] AS NVARCHAR(MAX)), '\"', '\"\"') + '\"'
+                    ELSE CAST([${col}] AS NVARCHAR(MAX))
+                END AS [${col}]"
             )
         fi
     done

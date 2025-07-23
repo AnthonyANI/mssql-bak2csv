@@ -92,7 +92,6 @@ filter_tables_by_user_selection() {
     local user_tables="$2"
 
     if [ -z "$user_tables" ]; then
-        # Return all tables if no filter is specified
         echo "$all_tables"
         return
     fi
@@ -118,16 +117,23 @@ filter_tables_by_user_selection() {
         filtered_tables="$matching_tables"
     fi
 
+    local warning_displayed=0
     for selected in "${selected_tables[@]}"; do
         local trimmed_selected
         trimmed_selected=$(echo "$selected" | xargs)
         if ! echo "$matching_tables" | grep -qE "(^|\.)\b${trimmed_selected}\b($|\.)"; then
             display "⚠️  Warning: Table '$trimmed_selected' not found"
+            warning_displayed=1
         fi
     done
 
+    if [ "$warning_displayed" -eq 1 ]; then
+        display ""
+    fi
+
     if [ -z "$filtered_tables" ]; then
         display "❌ Error: None of the specified tables were found"
+        display ""
         return 1
     fi
 
@@ -225,7 +231,6 @@ process_database_export() {
             return 1
         fi
 
-        display ""
         display "Selected tables for export:"
         count_and_display_tables "$export_tables"
     fi
