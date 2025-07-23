@@ -11,17 +11,29 @@ write_csv_header() {
     echo "${columns[*]}" >"$output_file"
 }
 
+truncate_error_msg() {
+    local msg="$1"
+    if [ ${#msg} -gt 200 ]; then
+        echo "${msg:0:200}..."
+    else
+        echo "$msg"
+    fi
+}
+
+EXPORT_RESULT_DELIMETER=$'\x1F'
+
 export_table_to_csv() {
     EXPORT_RUNNING=1
     local database="$1"
     local table="$2"
     local output_path="$3"
     local output_file="${output_path}/${PREFIX}${table}${SUFFIX}.csv"
+    local error_msg=""
 
     local table_info
     if ! table_info=$(get_table_schema_and_name "$database" "$table"); then
         EXPORT_RUNNING=0
-        echo "1:0"
+        echo "1:0:${output_file}:Failed to get table schema and name"
         return 1
     fi
 
@@ -35,7 +47,7 @@ export_table_to_csv() {
 
     if [ ${#column_info[@]} -eq 0 ]; then
         EXPORT_RUNNING=0
-        echo "1:0"
+        echo "1:0:${output_file}:No columns found for table"
         return 1
     fi
 
@@ -53,38 +65,26 @@ export_table_to_csv() {
     # Export data to file
     local error_output
     error_output=$(execute_sql_query "$database" "$data_query" -s"," -r1 2>&1 1>>"$output_file")
-    
+
     local status=$?
     local row_count=0
 
-    if [ -f "$output_file" ]; then
-        if grep -q "Msg [0-9]*, Level [0-9]*, State" "$output_file"; then
-            status=1
-            log "SQL error in output file for $table: $(grep -E 'Msg [0-9]*, Level [0-9]*, State' "$output_file" | head -1)"
-        elif [ -n "$error_output" ]; then
-            status=1
-            log "SQL error for $table: ${error_output:0:200}${#error_output>200?'...':''}"
-        else
-            # Check for a valid CSV output (at least header row)
-            if [ "$(wc -l < "$output_file")" -ge 1 ]; then
-                row_count=$(($(wc -l <"$output_file") - 1))
-                [ $row_count -lt 0 ] && row_count=0
-            else
-                status=1
-                log "Empty or invalid CSV file for $table"
-            fi
-        fi
+    if [ ! -f "$output_file" ]; then
+        status=1
+        error_msg=$(truncate_error_msg "${error_output:-Failed to create output file (unknown error)}")
+    elif [ -n "$error_output" ]; then
+        status=1
+        error_msg=$(truncate_error_msg "$error_output")
+    elif [ "$(wc -l <"$output_file")" -ge 1 ]; then
+        row_count=$(($(wc -l <"$output_file") - 1))
+        [ $row_count -lt 0 ] && row_count=0
     else
         status=1
-        if [ -n "$error_output" ]; then
-            log "SQL error (no output file) for $table: ${error_output:0:200}${#error_output>200?'...':''}"
-        else
-            log "Failed to create output file for $table (unknown error)"
-        fi
+        error_msg="Empty or invalid CSV file"
     fi
 
     EXPORT_RUNNING=0
-    echo "$status:$row_count:$output_file"
+    echo "$status${EXPORT_RESULT_DELIMETER}$row_count${EXPORT_RESULT_DELIMETER}$output_file${EXPORT_RESULT_DELIMETER}$error_msg"
 }
 
 filter_tables_by_user_selection() {
@@ -122,12 +122,12 @@ filter_tables_by_user_selection() {
         local trimmed_selected
         trimmed_selected=$(echo "$selected" | xargs)
         if ! echo "$matching_tables" | grep -qE "(^|\.)\b${trimmed_selected}\b($|\.)"; then
-            display "⚠️  Warning: Table '$trimmed_selected' not found in database"
+            display "⚠️  Warning: Table '$trimmed_selected' not found"
         fi
     done
 
     if [ -z "$filtered_tables" ]; then
-        display "❌ Error: None of the specified tables were found in database"
+        display "❌ Error: None of the specified tables were found"
         return 1
     fi
 
@@ -179,17 +179,16 @@ export_tables() {
                 local status
                 local row_count
                 local output_file
+                local error_msg
 
                 result=$(export_table_to_csv "$table_db" "$table_name" "$output_path")
-                status=$(echo "$result" | cut -d':' -f1)
-                row_count=$(echo "$result" | cut -d':' -f2)
-                output_file=$(echo "$result" | cut -d':' -f3-)
+                IFS="$EXPORT_RESULT_DELIMETER" read -r -d '' status row_count output_file error_msg <<<"$result"
 
                 if [ "$status" -eq 0 ]; then
                     log "✅ Exported ${table_db}.${table_name} as $(basename "$output_file") ($row_count rows)"
                     success_count=$((success_count + 1))
                 else
-                    log "❌ Failed: ${table_db}.${table_name}"
+                    log "❌ Failed: ${table_db}.${table_name}${error_msg:+ - $error_msg}"
                     failed_count=$((failed_count + 1))
                 fi
 
