@@ -113,10 +113,15 @@ build_data_query() {
         col=$(echo "$info" | cut -d'|' -f1)
         data_type=$(echo "$info" | cut -d'|' -f2)
 
-        if [[ "$data_type" =~ ^(binary|varbinary|image|float)$ ]]; then
-            # For raw data and float types, just select the column without transformation
+        if [[ "$data_type" =~ ^(binary|varbinary|image)$ ]]; then
+            # For raw data types, convert to hex
             select_exprs+=(
-                "[${col}]"
+                "ISNULL(CONVERT(NVARCHAR(MAX), [${col}], 1), '') AS [${col}]"
+            )
+        elif [[ "$data_type" =~ ^(float|real)$ ]]; then
+            # For float and real, convert with high scale and precision while avoiding overflow
+            select_exprs+=(
+                "ISNULL(TRIM(STR([${col}], 38, 10)), '') AS [${col}]"
             )
         else
             # For all other types, cast to NVARCHAR and apply CSV formatting and escaping as needed
